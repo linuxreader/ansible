@@ -1,12 +1,12 @@
 #SPDX-License-Identifier: MIT-0
 ---
 - name: Ensure requirements in place
-  package:
+  community.general.rpm_ostree_pkg:
     name:
       - guestfs-tools
       - python3-libvirt
     state: present
-  become: yes
+#  become: yes
 
 - name: Get VMs list
   community.libvirt.virt:
