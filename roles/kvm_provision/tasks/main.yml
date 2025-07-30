@@ -32,13 +32,23 @@
     register: copy_results
 
   - name: Configure the image
-    command: |
-      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
-      --hostname {{ vm_name }} \
-      --root-password password:{{ vm_root_pass }} \
-      --ssh-inject 'root:file:{{ ssh_key }}' \
+    command: >
+      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2
+      --hostname {{ vm_name }}
+      --root-password password:{{ vm_root_pass }}
       --uninstall cloud-init --selinux-relabel
+      --firstboot-command "nmcli c m eth0 con-name eth0 ip4 {{ ip_addr }}/24 gw4 {{ gw_addr }} ipv4.method manual && nmcli c d eth0 && nmcli c u eth0"
+  
+  - name: Create the Ansible user 
+    command: >
+      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2  
+      --run-command 'id {{ ansible_user }} 2>/dev/null || (useradd -m {{ ansible_user }} && echo "{{ ansible_password }}" | passwd --stdin {{ ansible_user }})'
     when: copy_results is changed
+
+  - name: Inject SSH key
+    command: >
+      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2
+      --ssh-inject {{ ansible_user }}:file:{{ ssh_key }}
 
   - name: Define vm
     community.libvirt.virt:

@@ -5,15 +5,16 @@
   become: yes
   vars:
     pool_dir: "/var/lib/libvirt/images"
-    vm:
-      - web
-      - DB
-      - ftp
+    vm: db1
     vcpus: 2
     ram_mb: 2048
     cleanup: no
     net: default
     ssh_pub_key: "/home/davidt/.ssh/id_ed25519.pub"
+    gw_addr: 192.168.122.1
+    ip_addr: 192.168.122.3
+    ansible_user: ansible
+    ansible_password: ansible
 
   tasks:
     - name: KVM Provision role
@@ -21,11 +22,10 @@
         name: kvm_provision
       vars:
         libvirt_pool_dir: "{{ pool_dir }}"
-        vm_name: "{{ item }}"
+        vm_name: "{{ vm }}"
         vm_vcpus: "{{ vcpus }}"
         vm_ram_mb: "{{ ram_mb }}"
         vm_net: "{{ net }}"
         cleanup_tmp: "{{ cleanup }}"
         ssh_key: "{{ ssh_pub_key }}"
-      loop: "{{ vm }}"
     

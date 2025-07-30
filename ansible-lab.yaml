@@ -1,0 +1,4 @@
+# Provision Ansible Lab
+- import_playbook: web1.yaml
+- import_playbook: db1.yaml
+- import_playbook: ftp1.yaml
