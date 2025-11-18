@@ -1,0 +1,12 @@
+all:
+  hosts:
+  children:
+  
+    containerships:
+      hosts:
+        podman-01:
+
+    database:
+      hosts:
+        db1:
+

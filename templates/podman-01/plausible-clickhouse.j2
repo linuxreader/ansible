@@ -1,0 +1,16 @@
+[Unit]
+Description=Plausible CE ClickHouse
+After=network.target
+
+[Container]
+Image=docker.io/clickhouse/clickhouse-server:23
+Network=plausible
+
+Volume=/apps/plausible/clickhouse/data:/var/lib/clickhouse:z
+Volume=/apps/plausible/clickhouse/config:/etc/clickhouse-server/config.d:z
+Volume=/apps/plausible/clickhouse/users:/etc/clickhouse-server/users.d:z
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=Plausible CE Postgres
+After=network.target
+
+[Container]
+Image=docker.io/postgres:16
+Network=plausible
+
+Environment=POSTGRES_PASSWORD=postgres
+Environment=POSTGRES_DB=plausible_db
+Environment=POSTGRES_USER=postgres
+
+Volume=/apps/plausible/db:/var/lib/postgresql/data:z
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
