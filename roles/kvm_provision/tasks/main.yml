@@ -1,11 +1,11 @@
 #SPDX-License-Identifier: MIT-0
 ---
-- name: Ensure requirements in place
-  community.general.rpm_ostree_pkg:
-    name:
-      - guestfs-tools
-      - python3-libvirt
-    state: present
+#- name: Ensure requirements in place
+#  community.general.rpm_ostree_pkg:
+#    name:
+#      - guestfs-tools
+#      - python3-libvirt
+#    state: present
 #  become: yes
 
 - name: Get VMs list
@@ -20,7 +20,8 @@
     get_url:
       url: "{{ base_image_url }}"
       dest: "/tmp/{{ base_image_name }}"
-      checksum: "sha256:{{ base_image_sha }}"
+      force: yes
+#      checksum: "sha256:{{ base_image_sha }}"
       
   - name: Copy base image to libvirt directory
     copy:

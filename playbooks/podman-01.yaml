@@ -1,0 +1,4 @@
+- name: podman-01 config
+  hosts: podman-01
+  include_playbook: quadlet.yaml
+  vars: quadlet_file 
