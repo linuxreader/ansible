@@ -1,0 +1,19 @@
+all:
+  hosts:
+  children:
+  
+    containership:
+      hosts:
+        podman-01:
+
+    database:
+      hosts:
+        mariadb-01:
+
+    storage:
+      hosts:
+        storage-01:
+
+    webserver:
+      hosts:
+        apache-01:

@@ -1,0 +1,25 @@
+[Unit]
+Description=Plausible CE App
+Wants=plausible-db.service plausible-clickhouse.service plausible.pod
+After=plausible-db.service plausible-clickhouse.service plausible.pod
+
+[Container]
+Image=docker.io/plausible/community-edition:latest
+Pod=plausible
+
+Environment=BASE_URL=https://plausible.example.com
+Environment=SECRET_KEY_BASE=REPLACE_ME
+
+Environment=DATABASE_URL=postgres://postgres:postgres@plausible-db:5432/plausible_db
+Environment=CLICKHOUSE_DATABASE_URL=http://plausible-clickhouse:8123/plausible_events_db
+
+Label=traefik.enable=true
+Label=traefik.http.routers.plausible.rule=Host(`plausible.example.com`)
+Label=traefik.http.routers.plausible.entrypoints=websecure
+Label=traefik.http.routers.plausible.tls.certresolver=le
+Label=traefik.http.services.plausible.loadbalancer.server.port=8000
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

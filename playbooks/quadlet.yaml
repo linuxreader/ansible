@@ -1,0 +1,70 @@
+---
+- name: Install a Quadlet
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create Quadlet Directory
+      file:
+        path: /etc/containers/systemd/users/{{ ansible_user }}
+        state: directory
+        mode: '0755'
+
+    - name: Enable linger for ansible user
+      copy:
+        dest: "/var/lib/systemd/linger/{{ ansible_user }}"
+        content: ""
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Add the quadlet file
+      template:
+        src: ../templates/{{ container_name }}.j2 
+        dest: /etc/containers/systemd/users/{{ ansible_user }}/{{ container_name )).container
+      notify: daemon
+
+    - name: daemon
+      become: true
+      become_user: {{ ansible_user }}
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        scope: user
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_user_id }}"
+
+    - name: Run Quadlet
+      become: true
+      become_user: {{ ansible_user }}
+      ansible.builtin.systemd_service:
+        name: {{ container_name }}.service
+        state: started
+        enabled: true
+        scope: user
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_user_id }}"
+
+
+  handlers:
+
+    - name: restart service
+      become: true
+      become_user: {{ ansible_user }}
+      ansible.builtin.systemd_service:
+        name: {{ container_name }}.service
+        state: restarted
+        scope: user
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_user_id }}"
+
+    - name: restorecon
+      command: restorecon -Rv /reset
+
+    - name: daemon
+      become: true
+      become_user: {{ ansible_user }}
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        scope: user
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_user_id }}"
+
