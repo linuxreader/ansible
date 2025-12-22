@@ -1,0 +1,172 @@
+---
+# tasks file for proxmox_vms
+- name: "Run preflight checks"
+  include_tasks: "preflight.yml"
+
+- name: "Create VM from template"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    clone: "{{ proxmox_template_name }}"
+    newid: "{{ proxmox_vmid }}"
+    name: "{{ proxmox_vm_name }}"
+    storage: "{{ proxmox_storage }}"
+    node: "{{ prox_template.proxmox_vms[0].node }}"
+
+- name: "Migrate VM on the desired node"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    migrate: true
+    timeout: 600 # 10 minutes
+
+- name: Grow existing disk
+  community.general.proxmox_disk:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    disk: scsi0
+    size: "{{ proxmox_disk_size }}"
+    state: resized
+    timeout: 600 # 10 minutes
+
+- name: "Get vm info from id"
+  community.general.proxmox_vm_info:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    vmid: "{{ proxmox_vmid }}"
+    config: "current" # toto test with pending
+  register: proxmox_vm_info
+
+- name: "Extract current configuration"
+  ansible.builtin.set_fact:
+    current_config: "{{ proxmox_vm_info.proxmox_vms[0].config }}"
+
+- name: "Show current configuration"
+  ansible.builtin.debug:
+    var: current_config
+
+## to task as ben made to see what part of the config is changed
+- name: "Update VM with required configuration"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    timeout: 600 # 10 minutes
+    update: true
+    agent: true
+    cores: "{{ proxmox_cores }}"
+    memory: "{{ proxmox_memory }}"
+  when: >
+    current_config.cores  | default(-1) != proxmox_cores or
+    current_config.memory | default(-1) != proxmox_memory
+  register: proxmox_vm_update
+
+- name: "Show changed configuration"
+  ansible.builtin.debug:
+    msg:
+      - "Configuration changed"
+      - "cores: {{ current_config.cores | default(-1) }} -> {{ proxmox_cores }}"
+      - "memory: {{ current_config.memory | default(-1) }} -> {{ proxmox_memory }}"
+  when: proxmox_vm_update.changed
+
+- name: "Update CloudInit configuration"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    timeout: 600 # 10 minutes
+    update: true
+    sshkeys: "{{ proxmox_ci_sshkeys | default('') }}"
+    ciuser: "{{ proxmox_ci_user | default('') }}"
+    nameservers: "{{ proxmox_ci_dns | default('') }}"
+    searchdomains: "{{ proxmox_ci_searchdomains | default('') }}"
+  when: >
+    current_config.sshkeys | default("") != proxmox_ci_sshkeys or
+    current_config.ciuser | default("") != proxmox_ci_user or
+    current_config.nameserver | default("") != proxmox_ci_dns or
+    current_config.searchdomain | default("") != proxmox_ci_searchdomains
+  register: proxmox_ci_update
+
+- name: "Show changed CloudInit configuration"
+  ansible.builtin.debug:
+    msg:
+      - 'CloudInit configuration changed'
+      - 'sshkeys: {{ current_config.sshkeys | default("") }} -> {{ proxmox_ci_sshkeys }}'
+      - 'ciuser: {{ current_config.ciuser | default("") }} -> {{ proxmox_ci_user }}'
+      - 'nameservers: {{ current_config.nameserver | default("") }} -> {{ proxmox_ci_dns }}'
+      - 'searchdomains: {{ current_config.searchdomain | default("") }} -> {{ proxmox_ci_searchdomains }}'
+  when: proxmox_ci_update.changed
+## end
+
+- name: Update VM nic with
+  community.general.proxmox_nic:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    vmid: "{{ proxmox_vmid }}"
+    interface: "{{ item.name }}"
+    bridge: "{{ item.bridge }}"
+    firewall: "{{ item.firewall }}"
+    tag: "{{ item.tag | default(omit) }}"
+  loop: "{{ proxmox_interface }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: "apply ip config to vm"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    update: true
+    ipconfig: "{{ proxmox_interface | convert_to_ipconfig }}"
+  when:
+    - proxmox_interface | default([]) | length > 0
+    - proxmox_interface | convert_to_ipconfig != current_config | filter_ipconfig
+
+- name: "Stop VM if hardware or cloud-init changes"
+  # we need to stop the VM if we have made changes to the hardware or cloud-init configuration to apply them
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    state: stopped
+  when:
+    - proxmox_vm_update.changed or proxmox_ci_update.changed
+    - proxmox_allow_reboot
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    name: "{{ proxmox_vm_name }}"
+    vmid: "{{ proxmox_vmid }}"
+    node: "{{ proxmox_node }}"
+    state: started
+
+- name: "Wait for VM to be up with ping"
+  ansible.builtin.wait_for:
+    host: "{{ proxmox_wait_vm_up_host }}"
+    port: 22
+    delay: 10
+    timeout: "{{ proxmox_wait_vm_up }}"
+  when: proxmox_wait_vm_up > 0

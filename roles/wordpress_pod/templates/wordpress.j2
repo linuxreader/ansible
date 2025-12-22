@@ -1,0 +1,9 @@
+[Container]
+Environment=WORDPRESS_DB_HOST=systemd-{{ site_name }}-db WORDPRESS_DB_USER={{ database_user }} WORDPRESS_DB_PASSWORD={{ database_password }} WORDPRESS_DB_NAME={{ site_name }}db
+Image={{ wordpress_image }}
+Pod={{ site_name }}.pod
+Volume={{ site_name }}:/var/www/html
+
+[Service]
+Restart=always
+

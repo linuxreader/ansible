@@ -17,6 +17,12 @@
     ansible_password: ansible
 
   tasks:
+    - name: Get VMs list
+      community.libvirt.virt:
+        command: list_vms
+      register: existing_vms
+      changed_when: no
+
     - name: KVM Provision role
       include_role:
         name: kvm_provision
@@ -28,4 +34,16 @@
         vm_net: "{{ net }}"
         cleanup_tmp: "{{ cleanup }}"
         ssh_key: "{{ ssh_pub_key }}"
-    
+      when: "vm_name not in existing_vms.list_vms" 
+
+- name: Configure control server
+  hosts: control
+  become: yes
+  tasks:
+    - name: install packages
+      package:
+        name: 
+          - python3-pip
+          - tmux
+          - rhel-system-roles
+        state: present 

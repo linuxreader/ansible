@@ -1,0 +1,71 @@
+---
+# defaults file for proxmox_vms
+
+# Proxmox API Host
+proxmox_api_host: "{{ undef(hint='Please provide the Proxmox API Host') }}"
+proxmox_api_user: "{{ undef(hint='Please provide the Proxmox API User') }}"
+proxmox_api_password: "{{ undef(hint='Please provide the Proxmox API Password') }}"
+## todo add token support
+
+
+# Proxmox VM defaults
+## template name to clone
+proxmox_template_name: "{{ undef(hint='Please provide the Proxmox Template Name') }}"
+
+## storage to use for the vm (needs to be present on the target node) (e.g. local-lvm)
+proxmox_storage: "{{ undef(hint='Please provide the Proxmox Storage') }}"
+
+## disk size to grow (e.g. 10G) cant shrink disks
+proxmox_disk_size: "{{ undef(hint='Please provide the Proxmox Disk Size') }}"
+
+## id for the new VM
+proxmox_vmid: "{{ undef(hint='Please provide the Proxmox VM ID') }}"
+
+## name for the new VM
+proxmox_vm_name: "{{ inventory_hostname }}"
+
+## number of cores for the new VM (needs to be an integer)
+proxmox_cores: "{{ undef(hint='Please provide the Proxmox VM Cores') }}"
+
+## memory for the new VM (e.g. 1024) needs to be an string (thx proxmox api)
+proxmox_memory: "{{ undef(hint='Please provide the Proxmox VM Memory') }}"
+
+## target node for the VM
+proxmox_node: "{{ undef(hint='Please provide the Proxmox Node') }}"
+
+# cloud-init defaults
+
+## cloud-init user
+proxmox_ci_user: null
+
+## cloud-init ssh keys
+## eg:
+# proxmox_ci_sshkeys: |
+#   ssh-rsa ABCD
+#   ssh-rsa EFGH
+proxmox_ci_sshkeys: null
+
+## cloud-init dns servers (comma separated)
+proxmox_ci_dns: null
+
+## cloud-init search domain
+proxmox_ci_searchdomains: null
+
+# network configuration
+proxmox_interface: []
+## todo add network configuration example
+# e.g.
+# proxmox_interface:
+#     - name: "net0"
+#       bridge: "vmbr10"
+#       firewall: false
+#       model: "virtio"
+#       tag: 100
+#       ipconfig: "ip=192.168.X.XXX/24,gw=192.168.X.X"
+
+# wait for VM to be up (in seconds) set to 0 to disable
+proxmox_wait_vm_up: 600
+proxmox_wait_vm_up_host: "{{ ansible_host }}"
+
+# allow reboot if changes are made on hardware or cloud-init
+proxmox_allow_reboot: false

@@ -1,0 +1,118 @@
+- name: Destroy VM image
+  when:
+    - input.image_state_desired == 'absent'
+  ansible.builtin.file:
+    path: '{{ base_path }}/{{ input.image_name }}'
+    state: absent
+
+- name: Download VM image
+  when:
+    - input.image_state_desired == 'present'
+  ansible.builtin.get_url:
+    url: '{{ input.image_url }}'
+    dest: '{{ base_path }}/{{ input.image_name }}'
+    mode: '0600'
+
+- name: Check if image is already customized
+  when:
+    - input.image_state_desired == 'present'
+  ansible.builtin.command:
+    cmd: 'virt-cat -a {{ base_path }}/{{ input.image_name }} /etc/sudoers.d/ansible'
+  changed_when: false
+  ignore_errors: true
+  register: image_customized
+
+- name: Customize the image
+  when:
+    - input.image_state_desired == 'present'
+    - image_customized.rc != 0
+  block:
+    - name: Customize the image
+      ansible.builtin.command:
+        cmd: 'virt-customize -a {{ base_path }}/{{ input.image_name }} {{ item }}'
+      with_items:
+        - --update
+        - --install qemu-guest-agent
+        - --run-command 'useradd --shell /bin/bash ansible'
+        - --run-command 'mkdir -p /home/ansible/.ssh'
+        - "--ssh-inject ansible:string:'{{ lookup('file', pub_key) }}'"
+        - --run-command 'chown -R ansible:ansible /home/ansible'
+        - "--write /etc/sudoers.d/ansible:'ansible ALL=(ALL) NOPASSWD: ALL'"
+        - --run-command 'chmod 0440 /etc/sudoers.d/ansible'
+        - --run-command 'chown root:root /etc/sudoers.d/ansible'
+        - --run-command '>/etc/machine-id'
+      changed_when: true
+  rescue:
+    # Don't let a failed customization leave the image behind
+    - name: Remove the image
+      ansible.builtin.file:
+        path: '{{ base_path }}/{{ input.image_name }}'
+        state: absent
+    - name: Fail the task
+      ansible.builtin.fail:
+        msg: 'Failed to customize the image'
+
+- name: Check if VM exists
+  ansible.builtin.command:
+    cmd: 'qm status {{ input.vm_id }}'
+  changed_when: false
+  ignore_errors: true
+  register: vm_status
+
+- name: Destroy VM
+  when:
+    - input.vm_state_desired == 'absent'
+    - vm_status.rc == 0
+  ansible.builtin.command:
+    cmd: >
+      qm destroy {{ input.vm_id }}
+
+- name: Create VM
+  when:
+    - input.vm_state_desired == 'present'
+    - vm_status.rc != 0
+  block:
+    - name: Create VM
+      ansible.builtin.command:
+        cmd: >
+          qm create {{ input.vm_id }} --name {{ input.vm_name }} --memory {{ input.vm_memory }}
+          --cores {{ input.vm_cores }} --net0 virtio,bridge={{ input.vm_bridge }}
+      changed_when: true
+
+    - name: Import disk to VM
+      ansible.builtin.command:
+        cmd: 'qm importdisk {{ input.vm_id }} {{ base_path }}/{{ input.image_name }} {{ input.vm_storage }}'
+      changed_when: true
+
+
+    - name: Set VM SCSI hardware and disk
+      ansible.builtin.command:
+        # cmd: 'qm set {{ input.vm_id }} --scsihw virtio-scsi-pci --scsi0 {{ input.vm_storage }}:{{ input.vm_id }}/vm-{{ input.vm_id }}-disk-0.raw'
+        # For lvm-local
+        cmd: 'qm set {{ input.vm_id }} --scsihw virtio-scsi-pci --scsi0 {{ input.vm_storage }}:vm-{{ input.vm_id }}-disk-0'
+      changed_when: true
+
+    - name: Set VM boot options
+      ansible.builtin.command:
+        cmd: 'qm set {{ input.vm_id }} --boot c --bootdisk scsi0'
+      changed_when: true
+
+    - name: Add Cloud-Init drive
+      ansible.builtin.command:
+        cmd: 'qm set {{ input.vm_id }} --ide2 {{ input.vm_storage }}:cloudinit'
+      changed_when: true
+
+    - name: Configure serial console
+      ansible.builtin.command:
+        cmd: 'qm set {{ input.vm_id }} --serial0 socket --vga serial0'
+      changed_when: true
+
+    - name: Enable QEMU guest agent
+      ansible.builtin.command:
+        cmd: 'qm set {{ input.vm_id }} --agent enabled=1'
+      changed_when: true
+
+    - name: Convert VM to template
+      ansible.builtin.command:
+        cmd: 'qm template {{ input.vm_id }}'
+      changed_when: true

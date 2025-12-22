@@ -1,0 +1,16 @@
+galaxy_info:
+  author: msterhuj
+  description: Deploy proxmox vms from cloud init template
+  namespace: msterhuj
+
+  license: GPL-3.0-only
+  min_ansible_version: "2.1"
+
+  galaxy_tags:
+    - "proxmox"
+    - "vm"
+    - "cloud-init"
+    - "template"
+    - "ci"
+
+dependencies: []

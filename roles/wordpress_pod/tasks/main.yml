@@ -1,0 +1,94 @@
+---
+- name: Make sure rootless user exists to run containers
+  user:
+    name: "{{ podman_user }}"
+    uid: "{{ podman_user_uid }}"
+    create_home: yes
+    state: present
+    shell: /bin/bash
+# Set password and log in as user at least once after this^
+## Use `sudo -u {{ podman_user }} bash -li` to login as nologin user.
+
+- name: Allow HTTP traffic on port {{ external_port }}
+  ansible.posix.firewalld:
+    port: "{{ external_port }}/tcp"
+    permanent: true
+    state: enabled
+  notify: firewalld reload
+
+- name: Pull wordpress Podman image
+  containers.podman.podman_image:
+    name: "{{ wordpress_image }}"
+    state: present
+  become: false
+  become_user: "{{ podman_user }}"
+
+- name: Pull mysql image
+  containers.podman.podman_image:
+    name: "{{ mysql_image }}"
+    state: present
+  become: false
+  become_user: "{{ podman_user }}"
+
+- name: Create Quadlet Directory
+  file:
+    path: /etc/containers/systemd/users/{{ podman_user }}
+    state: directory
+    mode: '0755'
+
+- name: Enable linger for {{ podman_user }} user
+  copy:
+    dest: "/var/lib/systemd/linger/{{ podman_user }}"
+    content: ""
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Add the wordpress quadlet file
+  template:
+    src: wordpress.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ site_name }}-wordpress.container
+  notify: daemon reload
+
+- name: Add the sql quadlet file
+  template:
+    src: db.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ site_name }}-db.container
+  notify: daemon reload
+
+- name: Add the pod quadlet file
+  template:
+    src: pod.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ site_name }}.pod
+  notify: daemon reload
+
+- name: reload daemon
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Run and enable Wordpress pod
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: "{{  site_name }}-pod"
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+#- name: restart service
+#  become: true
+#  become_user: "{{ podman_user }}"
+#  ansible.builtin.systemd_service:
+#    name: "{{ site_name }}-wordpress.service"
+#    state: restarted
+#    scope: user
+#  environment:
+#    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+

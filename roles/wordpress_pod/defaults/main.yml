@@ -1,0 +1,6 @@
+---
+podman_user: podboy
+podman_user_uid: 1111
+wordpress_image: docker.io/wordpress:6-php8.4-apache
+mysql_image: docker.io/mysql:8.0
+

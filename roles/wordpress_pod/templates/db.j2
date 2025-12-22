@@ -1,0 +1,8 @@
+[Container]
+Environment=MYSQL_DATABASE={{ site_name }}db MYSQL_USER={{ database_user }} MYSQL_PASSWORD={{ database_password }} MYSQL_RANDOM_ROOT_PASSWORD=1
+Image={{ mysql_image }}
+Pod={{ site_name }}.pod
+Volume={{ site_name }}db:/var/lib/mysql
+
+[Service]
+Restart=always
