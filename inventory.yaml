@@ -1,19 +1,11 @@
 all:
   hosts:
+    localhost: 
+      ansible_host: 127.0.0.1
+      ansible_connection: ssh 
+      ansible_user: davidt
   children:
   
     containership:
       hosts:
         podman-01:
-
-    database:
-      hosts:
-        mariadb-01:
-
-    storage:
-      hosts:
-        storage-01:
-
-    webserver:
-      hosts:
-        apache-01:

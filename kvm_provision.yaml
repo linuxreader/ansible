@@ -34,15 +34,3 @@
         cleanup_tmp: "{{ cleanup }}"
         ssh_key: "{{ ssh_pub_key }}"
       when: "vm_name not in existing_vms.list_vms" 
-
-- name: Configure control server
-  hosts: control
-  become: yes
-  tasks:
-    - name: install packages
-      package:
-        name: 
-          - python3-pip
-          - tmux
-          - rhel-system-roles
-        state: present 
