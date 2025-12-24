@@ -1,0 +1,22 @@
+---
+- name: copy custom facts
+  hosts: all
+  become: yes
+  vars:
+    remote_dir: /etc/ansible/facts.d
+    package_file: package.fact
+    service_file: service.fact
+  tasks:
+  - name: create the custom facts directory
+    file:
+      state: directory
+      recurse: yes
+      path: "{{ remote_dir }}"
+  - name: copy the package facts
+    copy:
+      src: "{{ package_file }}"
+      dest: /etc/ansible/facts.d
+  - name: copy the service facts
+    copy:
+      src: "{{ service_file }}"
+      dest: /etc/ansible/facts.d

@@ -1,0 +1,84 @@
+---
+- name: file Server Setup
+  hosts: file
+  become: yes
+  vars_files: vars/allvars.yaml
+  tasks:
+
+    - name: install file packages
+      package: 
+       name: "{{ ansible_facts['ansible_local']['package']['packages']['ftp_package'] }}"
+       state: latest
+
+    - name: Set up file services
+      service: 
+        name: "{{ ansible_facts['ansible_local']['service']['services']['ftp_service'] }}"
+        state: started
+        enabled: yes
+
+    - name: Install firewalld
+      package:
+        name: "{{ ansible_facts['ansible_local']['package']['packages']['firewall_package'] }}"
+        state: latest
+
+    - name: Set up firewalld service
+      service: 
+        name: "{{ ansible_facts['ansible_local']['service']['services']['firewall_service'] }}"
+        state: started
+        enabled: true
+
+    - name: Open service in firewall
+      firewalld:
+        service: ftp
+        permanent: true
+        state: enabled
+        immediate: yes
+
+    - name: ftp root
+      file:
+        path: "{{ ftp_root }}"
+        owner: ftp
+        group: ftp
+        mode: '0755'
+
+- name: Lamp Server Setup
+  hosts: lamp
+  become: yes
+  vars_files: vars/allvars.yaml
+  tasks:
+
+    - name: Install web packages
+      package: 
+        name: "{{ ansible_facts['ansible_local']['package']['packages']['web_package'] }}"
+        state: latest 
+
+    - name: Set up web service
+      service: 
+        name: "{{ ansible_facts['ansible_local']['service']['services']['web_service'] }}"
+        state: started
+        enabled: yes
+    
+    - name: Install firewalld
+      package:
+        name: "{{ ansible_facts['ansible_local']['package']['packages']['firewall_package'] }}"
+        state: latest
+
+    - name: Set up firewalld service
+      service: 
+        name: "{{ ansible_facts['ansible_local']['service']['services']['firewall_service'] }}"
+        state: started
+        enabled: true
+
+    - name: Open service in firewall
+      firewalld:
+        service: http 
+        permanent: true
+        state: enabled
+        immediate: yes
+
+    - name: Web root
+      copy: 
+        src: index.html
+        dest: "{{ web_root }}"
+
+

@@ -1,0 +1,9 @@
+---
+- name: generate /etc/hosts
+  hosts: all
+  gather_facts: yes
+  tasks: 
+  - name: Generate hosts file with template
+    template: 
+      src: hosts.j2
+      dest: /etc/hosts
