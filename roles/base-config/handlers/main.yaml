@@ -1,0 +1,6 @@
+---
+# handlers file for base-config
+  - name: Restart SSSD
+    service:
+      name: sssd
+      state: restarted

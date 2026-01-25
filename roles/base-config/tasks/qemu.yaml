@@ -1,0 +1,15 @@
+# -------------------------------
+# QEMU Guest Agent Install
+# -------------------------------
+
+- block:
+  - name: Install QEMU Agent
+    package:
+      name: qemu-guest-agent
+      state: present
+
+  - name: Enable and restart QEMU agent
+    service:
+      name: qemu-guest-agent
+      state: restarted
+      enabled: yes

@@ -9,3 +9,4 @@ all:
     containership:
       hosts:
         podman-01:
+        dt-lab3:

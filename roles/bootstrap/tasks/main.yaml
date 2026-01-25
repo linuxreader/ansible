@@ -1,0 +1,58 @@
+- name: Remove requiretty from sudoers (RedHat only)
+  lineinfile:
+    path: /etc/sudoers
+    state: absent
+    regexp: '^\s*Defaults\s+requiretty$'
+    validate: '/usr/sbin/visudo -cf %s'
+  when: ansible_facts["os_family"] == "RedHat"
+
+- name: Gather facts
+  setup:
+
+- name: Install SELinux dependencies (RedHat)
+  yum:
+    name:
+      - libselinux-python
+      - policycoreutils-python
+    state: present
+  when: ansible_facts["os_family"] == "RedHat"
+
+- name: Install sudo (Debian)
+  apt:
+    name: sudo
+    state: present
+    cache_valid_time: 3600
+    force_apt_get: yes
+  when: ansible_facts["os_family"] == "Debian"
+
+- name: Create ansible user {{ ansible_user }}
+  user:
+    name: "{{ ansible_user }}"
+    groups: "{{ 'wheel' if ansible_facts['os_family'] == 'RedHat' else '' }}"
+    home: "/home/{{ ansible_user }}"
+    uid: "{{ ansible_user_uid }}"
+    shell: /bin/bash
+    create_home: yes
+
+- name: Give {{ ansible_user }} passwordless sudo
+  lineinfile:
+    path: /etc/sudoers.d/{{ ansible_user }}
+    line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL"
+    create: yes
+    mode: 0440
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Ensure {{ ansible_user }} .ssh directory exists
+  file:
+    path: /home/{{ ansible_user }}/.ssh
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0700'
+
+- name: Install public key for {{ ansible_user }}
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ lookup('file', '/sombrero-data/keys/id_rsa.pub') }}"
+    state: present
+

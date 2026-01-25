@@ -1,19 +1,18 @@
 ---
-- name: Deploys VM based on cloud image
+# Example useage: ansible-playbook kvm_provision.yaml -K -e vm=testvm-01 -e ip_addr=192.168.122.3 -e disk_size=31 -e vm_mac=52:54:00:a0:b0:01
+
+- name: Deploy VM based on cloud image
   hosts: localhost
   gather_facts: yes
-  become: yes
+  become: no
   vars:
     pool_dir: "/var/lib/libvirt/images"
-    vm: test
-    vcpus: 2
-    ram_mb: 2048
     cleanup: no
     net: default
-    ssh_pub_key: "/home/davidt/.ssh/id_ed25519.pub"
-    gw_addr: 192.168.122.1
-    ip_addr: 192.168.122.3
+    ssh_pub_key: "/var/home/davidt/.ssh/id_ed25519.pub"
     ansible_password: "{{ ansible_user_pass }}"
+    ram_mb: 2048
+    vcpus: 2
 
   tasks:
     - name: Get VMs list
@@ -33,4 +32,4 @@
         vm_net: "{{ net }}"
         cleanup_tmp: "{{ cleanup }}"
         ssh_key: "{{ ssh_pub_key }}"
-      when: "vm_name not in existing_vms.list_vms" 
+      when: "vm_name not in existing_vms.list_vms"

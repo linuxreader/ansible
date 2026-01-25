@@ -1,0 +1,24 @@
+# DNF tuning and updates
+- block:
+  - name: Copy to dnf.conf
+    copy:
+      dest: /etc/dnf/dnf.conf
+      content: |
+        [main]
+        gpgcheck=1
+        installonly_limit=3
+        clean_requirements_on_remove=True
+        best=True
+        skip_if_unavailable=False
+        fastestmirror=True
+        max_parallel_downloads=10
+        defaultyes=True
+        keepcache=True
+
+  - name: Run DNF updates
+    dnf:
+      name: "*"
+      state: latest
+  when: ansible_facts['os_family'] == "RedHat"
+
+

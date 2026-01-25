@@ -1,0 +1,15 @@
+[sssd]
+services = nss, pam
+config_file_version = 2
+domains = {{ ad_domain }}
+
+[domain/{{ ad_domain }}]
+id_provider = ad
+ldap_id_mapping = False
+auth_provider = ad
+access_provider = simple
+simple_allow_groups = {{ ((ad_user_groups or []) + (ad_admin_groups or [])) | join(",") }}
+simple_allow_users = {{ ((ad_user_users or []) + (ad_admin_users or [])) | join(",") }}
+use_fully_qualified_names = False
+ad_gpo_access_control = permissive
+override_homedir = /home/%u

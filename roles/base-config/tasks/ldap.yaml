@@ -1,0 +1,98 @@
+    # Active directory
+- block:    
+  - name: Install required packages (RHEL)
+    package:
+      name:
+        - realmd
+        - sssd
+        - adcli
+        - oddjob
+        - oddjob-mkhomedir
+        - samba-common-tools
+      state: present
+    when: ansible_facts['os_family'] == "RedHat"
+  
+  - name: Install required packages (Debian/Ubuntu)
+    package:
+      name:
+        - realmd
+        - sssd
+        - sssd-tools
+        - adcli
+        - packagekit
+        - samba-common-bin
+        - oddjob
+        - oddjob-mkhomedir
+      state: present
+    when: ansible_facts['os_family'] == "Debian"
+
+  - name: Ensure oddjobd is enabled and running
+    service:
+      name: oddjobd
+      state: started
+      enabled: yes
+    when: ansible_facts['os_family'] == "RedHat"
+    
+      # Ensure PAM home directory creation is configured
+  - name: Ensure PAM mkhomedir is configured (RHEL)
+    lineinfile:
+      path: /etc/pam.d/system-auth
+      regexp: '^session\s+optional\s+pam_oddjob_mkhomedir\.so'
+      line: 'session optional pam_oddjob_mkhomedir.so'
+      state: present
+    when: ansible_facts['os_family'] == "RedHat"
+
+  - name: Discover AD domain
+    command: realm discover {{ ad_domain }}
+    register: realm_discover
+    changed_when: false
+
+  - name: Join AD domain
+    expect:
+      command: realm join --user={{ ad_user }} {{ ad_domain }}
+      responses:
+        (?i)password: "{{ ad_password }}"
+    args:
+      creates: "/etc/sssd/sssd.conf"
+
+  - name: Remove old admin groups from sudoers
+    lineinfile:
+      path: /etc/sudoers
+      regexp: '^%.* ALL=\(ALL\) NOPASSWD:ALL$'
+      state: absent
+
+  - name: Ensure admin users are in sudoers
+    lineinfile:
+      path: /etc/sudoers
+      line: "{{ item | replace(' ', '\\ ') }} ALL=(ALL) NOPASSWD:ALL"
+      insertafter: EOF
+      validate: "visudo -cf %s"
+      state: present
+    loop: "{{ ad_admin_users | default([]) }}"
+    when: ad_admin_users is defined and ad_admin_users | length > 0
+
+
+  - name: Ensure admin groups are in sudoers
+    lineinfile:
+      path: /etc/sudoers
+      line: "%{{ item | replace(' ', '\\ ') }} ALL=(ALL) NOPASSWD:ALL"
+      insertafter: EOF
+      validate: "visudo -cf %s"
+      state: present
+    loop: "{{ ad_admin_groups | default([]) }}"
+    when: ad_admin_groups is defined and ad_admin_groups | length > 0
+
+  - name: Deploy SSSD config from template
+    template:
+      src: sssd.conf.j2
+      dest: /etc/sssd/sssd.conf
+      owner: root
+      group: root
+      mode: '0600'
+
+  - name: Restart SSSD
+    service:
+      name: sssd
+      state: restarted
+
+  when: ldap_on

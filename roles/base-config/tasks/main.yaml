@@ -1,0 +1,15 @@
+---
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone }}"
+
+- include_tasks: history.yaml
+- include_tasks: dnf.yaml
+- include_tasks: qemu.yaml
+- include_tasks: ldap.yaml
+- include_tasks: local.yaml
+- include_tasks: auto_update.yaml
