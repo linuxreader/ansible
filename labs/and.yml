@@ -1,0 +1,8 @@
+---
+- name: testing multiple conditions
+  hosts: all
+  tasks:
+  - name: showing output
+    debug:
+      msg: using Alma Linux 9.5
+    when: ansible_facts['distribution_version'] == "9.5" and ansible_facts['distribution'] == "Alma" 

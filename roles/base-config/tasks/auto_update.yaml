@@ -1,0 +1,166 @@
+# roles/base-config/tasks/auto_update.yaml
+
+# --- Enable / configure path ---
+- block:
+    - name: Ensure dnf-automatic package is installed
+      dnf:
+        name: dnf-automatic
+        state: present
+
+    - name: Ensure Postfix is installed
+      dnf:
+        name: postfix
+        state: present
+
+    - name: Configure Postfix main.cf for basic email delivery
+      blockinfile:
+        path: /etc/postfix/main.cf
+        block: |
+          myhostname = {{ inventory_hostname }}.psi.edu
+          myorigin = psi.edu
+          {% if postfix_relayhost is defined and postfix_relayhost != "" %}
+          relayhost = {{ postfix_relayhost }}
+          {% endif %}
+
+    - name: Enable and start Postfix service
+      systemd:
+        name: postfix
+        state: started
+        enabled: yes
+
+    - name: Configure dnf-automatic to use email
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        regexp: '^emit_via'
+        line: 'emit_via = email'
+
+    - name: Remove all existing email_to lines in [email] section
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        regexp: '^\s*email_to\s*='
+        state: absent
+
+    - name: Add correct email_to in [email] section
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        line: 'email_to = {{ dnf_automatic.email_to }}'
+        insertafter: '^\[email\]'
+
+    - name: Remove all existing email_from lines in [email] section
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        regexp: '^\s*email_from\s*='
+        state: absent
+
+    - name: Add correct email_from in [email] section
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        line: 'email_from = {{ dnf_automatic.email_from }}'
+        insertafter: '^\[email\]'
+
+    - name: Configure dnf-automatic to apply updates
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        regexp: '^apply_updates'
+        line: 'apply_updates = {{ dnf_automatic.apply_updates | ternary("yes","no") }}'
+
+    - name: Configure dnf-automatic to reboot if needed
+      lineinfile:
+        path: /etc/dnf/automatic.conf
+        regexp: '^reboot = '
+        line: 'reboot = {{ dnf_automatic.reboot }}'
+
+    - name: Stop and disable dnf-automatic timer before override
+      systemd:
+        name: dnf-automatic.timer
+        state: stopped
+        enabled: no
+      failed_when: false
+      changed_when: false
+
+    - name: Reset systemd runtime state to clear queued jobs
+      command: systemctl reset-failed dnf-automatic.timer
+      changed_when: false
+      failed_when: false
+
+    - name: Create override directory for dnf-automatic.timer
+      file:
+        path: /etc/systemd/system/dnf-automatic.timer.d
+        state: directory
+        mode: '0755'
+
+    - name: Apply systemd override with OnCalendar from vars
+      copy:
+        dest: /etc/systemd/system/dnf-automatic.timer.d/override.conf
+        content: |
+          [Timer]
+          OnCalendar=
+          OnCalendar={{ dnf_automatic.day_of_week }} *-*-* {{ dnf_automatic.time }}
+          RandomizedDelaySec={{ dnf_automatic.randomized_delay | default('0') }}
+          Persistent=true
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      command: systemctl daemon-reexec
+
+    - name: Enable and start dnf-automatic timer
+      systemd:
+        name: dnf-automatic.timer
+        state: started
+        enabled: yes
+  when: dnf_automatic.active == true
+  tags: dnf_automatic
+
+
+# --- Removal path ---
+- block:
+    - name: Stop and disable dnf-automatic timer
+      systemd:
+        name: dnf-automatic.timer
+        state: stopped
+        enabled: no
+      failed_when: false
+      changed_when: false
+
+    - name: Reset systemd runtime state for dnf timer
+      command: systemctl reset-failed dnf-automatic.timer
+      changed_when: false
+      failed_when: false
+
+    - name: Remove systemd override directory for dnf-automatic.timer
+      file:
+        path: /etc/systemd/system/dnf-automatic.timer.d
+        state: absent
+
+    - name: Remove dnf-automatic configuration file
+      file:
+        path: /etc/dnf/automatic.conf
+        state: absent
+
+    - name: Remove dnf-automatic package
+      dnf:
+        name: dnf-automatic
+        state: absent
+
+    - name: Stop and disable Postfix service
+      systemd:
+        name: postfix
+        state: stopped
+        enabled: no
+      failed_when: false
+      changed_when: false
+
+    - name: Remove Postfix package
+      dnf:
+        name: postfix
+        state: absent
+
+    - name: Remove Postfix configuration directory
+      file:
+        path: /etc/postfix
+        state: absent
+
+    - name: Reload systemd daemon after cleanup
+      command: systemctl daemon-reexec
+  when: dnf_automatic.active == false
+  tags: dnf_automatic

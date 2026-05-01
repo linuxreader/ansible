@@ -1,0 +1,35 @@
+---
+ad_domain: []
+ad_user: []
+ad_admin_groups: []
+ad_user_groups: []
+ad_user_users: []
+ad_admin_users: []
+ad_integration_realm: []
+ad_integration_ou: []
+ad_integration_manage_sudo: true
+ad_integration_enable: true
+timezone: America/Phoenix
+timesync_ntp_servers:
+  - hostname: pool.ntp.org
+    iburst: true
+
+dnf_automatic:
+  day_of_week: Sunday
+  time: "21:00:00"
+  randomized_delay: 15
+  email_to: []
+  email_from: []
+  active: true
+  apply_updates: true
+  reboot: "when-needed"
+#For dnf update emails
+postfix_relayhost: []
+
+qemu_config: false
+base_config: true
+history_config: true
+dnf_config: true
+ldap_on: false
+journal_p: true
+gui: false

@@ -1,0 +1,2 @@
+- import_playbook: playbooks/homelab.yml
+- import_playbook: playbooks/desktop.yml

@@ -1,0 +1,14 @@
+2025-07-10T11:48:37.157233+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2025-07-10T11:48:37.157600+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2025-07-10T11:48:37.157628+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: ghcr.io/ansible-community/community-ee-base:latest: image not known
+
+2025-07-10T11:49:00.315155+00:00 ERROR 'ansible_navigator.actions.collections._parse' /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_get_url.py AnsibleError (get_docstring): unknown doc_fragment(s) in file /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_get_url.py: ansible.windows.web_request
+2025-07-10T11:49:00.315305+00:00 ERROR 'ansible_navigator.actions.collections._parse' /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_package.py AnsibleError (get_docstring): unknown doc_fragment(s) in file /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_package.py: ansible.windows.web_request
+2025-07-10T11:49:00.315329+00:00 ERROR 'ansible_navigator.actions.collections._parse' /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_uri.py AnsibleError (get_docstring): unknown doc_fragment(s) in file /usr/share/ansible/collections/ansible_collections/ansible/windows/plugins/modules/win_uri.py: ansible.windows.web_request
+2025-07-10T11:50:07.287624+00:00 WARNING 'ansible_navigator.run' Dirty exit, killing the pid
+2025-07-10T11:50:31.052516+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' Image inspection failed, image assumed to be corrupted or missing
+2025-07-10T11:50:31.052815+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stdout: []
+
+2025-07-10T11:50:31.052844+00:00 WARNING 'ansible_navigator.image_manager.puller._log_message' stderr: Error: ghcr.io/ansible-community/community-ee-minimal:latest: image not known
+

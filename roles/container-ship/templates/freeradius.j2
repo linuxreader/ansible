@@ -1,0 +1,11 @@
+[Container]
+ContainerName=my-radius
+Image={{ freerad_image }}
+Volume=/home/{{ podman_user }}/freeradius/raddb:/etc/raddb:Z
+PublishPort=1812:1812/udp
+PublishPort=1813:1813/udp
+Exec=/usr/sbin/freeradius -X
+
+[Service]
+Restart=always
+

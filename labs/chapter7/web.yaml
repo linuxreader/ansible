@@ -1,0 +1,51 @@
+---
+- name: set up a webserver
+  vars_files: packages
+  hosts: ansible1
+  become: yes
+  tasks:
+    - name: block
+      block:
+      - name: install web packages
+        yum:
+          name: "{{ item }}"
+          state: present
+        loop: "{{ web }}"
+        when: > 
+          ( ansible_facts['distribution'] == "AlmaLinux" ) 
+          or 
+          ( ansible_facts['distribution'] == "RedHat" )
+          and 
+          ( ansible_facts['distribution_version'] > "8" ) 
+          and 
+          (ansible_facts['distribution'] != "Fedora" )
+      rescue:
+        - name: distribution is invalid
+          debug:
+            msg: Host {{ ansible_facts['hostname'] }} does not meet minimal requirements"
+
+    - name: copy file to webserver
+      copy:
+        src: /tmp/index.html
+        dest: /var/www/html/
+      notify: restart_httpd
+
+    - name: open http
+      ansible.posix.firewalld:
+        service: http
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: open https
+      ansible.posix.firewalld:
+        service: https
+        state: enabled
+        permanent: true
+        immediate: true
+
+  handlers:
+    - name: restart_httpd 
+      service:
+        name: httpd
+        state: restarted

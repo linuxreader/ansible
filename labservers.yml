@@ -1,0 +1,7 @@
+- name: Configure lab
+  hosts: lab
+  roles:
+    - base-config
+    - container-ship
+
+

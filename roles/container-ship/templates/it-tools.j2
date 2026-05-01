@@ -1,0 +1,11 @@
+[Container]
+ContainerName=it-tools
+Image=corentinth/it-tools
+#PodmanArgs=--interactive --tty
+PublishPort=8080:80
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

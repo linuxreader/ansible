@@ -1,0 +1,15 @@
+---
+- name: stat module test
+  hosts: ansible1
+  tasks:
+  - command: touch /tmp/statfile
+  - stat:
+      path: /tmp/statfile
+    register: st
+  - name: show current values
+    debug:
+      msg: current value of the st variable is {{ st }}
+  - fail:
+      msg: "File is not writeable"
+    when: not st.stat.writeable
+

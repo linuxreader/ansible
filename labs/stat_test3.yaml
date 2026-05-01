@@ -1,0 +1,21 @@
+---
+- name: stat module test 3
+  hosts: ansible1
+  tasks:
+  
+  - name: Create file with rrr
+    file: 
+      state: touch
+      dest: /tmp/testfile3
+      mode: '0444'
+
+  - name: Gather data on file in right
+    stat:
+      path: /tmp/testfile3
+    register: st
+
+  - name: Change file to 777 if not 777
+    file:
+      path: /tmp/testfile3
+      mode: '0777'
+    when: st.stat.mode != '0777'

@@ -1,0 +1,65 @@
+---
+- block:
+  - name: Create freeradius directory
+    ansible.builtin.file:
+      path: /home/{{ podman_user }}/freeradius
+      state: directory
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0755'
+
+  - name: Copy raddb directory to host
+    ansible.builtin.copy:
+      src: raddb/
+      dest: /home/{{ podman_user }}/freeradius/raddb/
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0755'
+
+  - name: allow freeradius ports on firewall
+    ansible.posix.firewalld:
+      port: 1812-1813/udp
+      permanent: true
+      immediate: true
+      state: enabled
+
+  - name: Pull FreeRadius Podman image
+    containers.podman.podman_image:
+      name: "{{ freerad_image }}"
+      state: present
+    become: false
+    become_user: "{{ podman_user }}"
+
+  - name: Add the freeradius quadlet file
+    ansible.builtin.template:
+      src: freeradius.j2
+      dest: /etc/containers/systemd/users/{{ podman_user }}/freeradius.container
+    notify: daemon reload
+
+  - name: reload daemon
+    become: true
+    become_user: "{{ podman_user }}"
+    ansible.builtin.systemd_service:
+      daemon_reload: true
+      scope: user
+    environment:
+      XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+  - name: enable service
+    become: true
+    become_user: "{{ podman_user }}"
+    ansible.builtin.systemd_service:
+      name: "freeradius.service"
+      state: restarted
+      enabled: true
+      scope: user
+    environment:
+      XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+  - name: install freeradius utils
+    package:
+      name: freeradius-utils
+      state: present
+  when: freeradius_container
+  tags: freeradius_container
+

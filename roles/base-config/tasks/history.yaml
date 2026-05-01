@@ -1,0 +1,11 @@
+- name: Add history timestamps for RHEL
+  lineinfile:
+    dest: /etc/profile
+    line: "export HISTTIMEFORMAT='%F %T '"
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Add history timestamps for Debian
+  lineinfile:
+    dest: /etc/bash.bashrc
+    line: "export HISTTIMEFORMAT='%F %T '"
+  when: ansible_facts['os_family'] == "Debian"

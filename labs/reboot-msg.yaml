@@ -1,0 +1,27 @@
+---
+- name: reboot-msg
+  hosts: practice
+  tasks:
+  - name: add a line to a file before rebooting
+    lineinfile:
+      create: true
+      state: present
+      path: /tmp/rebooted
+      insertafter: EOF
+      line: rebooted at {{ ansible_facts['date_time']['time'] }}:{{ ansible_facts['date_time']['second'] }}
+
+  - name: run a cron job on reboot
+    cron:
+      name: "run on reboot"
+      state: present
+      special_time: reboot
+      job: "echo rebooted at $(date) >> /tmp/rebooted"
+
+  - name: reboot managed host
+    reboot:
+      msg: reboot initiated
+      test_command: whoami
+
+  - name: print reboot success message
+    debug:
+      msg: reboot success

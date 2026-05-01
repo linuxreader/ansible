@@ -1,0 +1,10 @@
+---
+- name: Specify user variable through the command line and create that user
+  hosts: all
+  vars:
+    user: default
+  tasks:
+    - name: Create user {{ user }} on {{ ansible_hostname }}
+      user:
+        name: "{{ user }}"
+

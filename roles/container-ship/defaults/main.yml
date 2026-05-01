@@ -1,0 +1,21 @@
+#SPDX-License-Identifier: MIT-0
+---
+podman_user: seal
+podman_user_uid: 11111
+
+###########################################
+# defaults for freeradius_container ######
+# ########################################
+## Run freeradius container tasks on host
+freeradius_container: no
+
+## Set the freeradius image
+freerad_image: docker.io/freeradius/freeradius-server:latest
+
+###########################################
+##### Password Reset Tool Container #######
+###########################################
+password_reset_container: no
+password_reset_container_image: docker.io/ltbproject/self-service-password:latest
+
+password_reset_port: 8085

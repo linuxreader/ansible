@@ -1,0 +1,29 @@
+---
+- name: cron job
+  hosts: ansible1
+  tasks:
+  - name: cron job to restart servers at 2am each weekday
+    cron:
+      name: restart servers
+      weekday: MON-FRI
+      hour: 2
+      job: "reboot"
+
+  - name: After reboot send log message to syslog
+    cron: 
+      name: Print reboot message to syslog
+      special_time: reboot
+      job: "logger Sytem rebooted"  
+
+  - name: set the default systemd target to multi-user
+    file:
+      src: /usr/lib/systemd/system/multi-user.target
+      dest: /etc/systemd/system/default.target
+      state: link  
+
+  - name: populate service facts
+    service_facts:
+
+  - name: show current version of cron process using service facts
+    debug:
+      var: ansible_facts.services['crond.service']

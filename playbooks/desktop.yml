@@ -1,0 +1,86 @@
+---
+- name: Setup Development Environment
+  hosts: localhost
+  become: yes
+  become_user: davidt
+  tasks:
+
+    # Install Flatpak applications
+    - name: Install Flatpak applications
+      flatpak:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - com.brave.Browser
+        - org.gnome.Snapshot
+        - org.libreoffice.LibreOffice
+        - org.remmina.Remmina
+        - com.termius.Termius
+        - com.slack.Slack
+        - org.keepassxc.KeePassXC
+        - org.mozilla.Thunderbird
+        - us.zoom.Zoom
+        - org.wireshark.Wireshark
+        - com.google.Chrome
+        - io.github.shiftey.Desktop
+        - com.jgraph.drawio.desktop
+        - org.adishatz.Screenshot
+        - com.github.finefindus.eyedropper
+        - com.obsproject.Studio
+        - com.vivaldi.Vivaldi
+        - com.vscodium.codium
+        - org.kde.kdenlive
+        - io.github.input_leap.input-leap
+        - com.spotify.Client
+        - org.kde.kdenlive
+        - com.github.johnfactotum.Foliate
+        - be.alexandervanhee.gradia
+        - org.atheme.audacious
+        - org.kde.krita
+        - de.leopoldluley.Clapgrep
+        - im.riot.Riot
+        - io.github.Faugus.faugus-launcher
+      tags: flatpack_install
+
+    - name: Install homebrew applications
+      homebrew:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - podlet
+        - podman-compose
+        - uv
+
+    - name: Install pip modules
+      ansible.builtin.pip:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - ansible-navigator
+        - ttkbootstrap 
+        - matplotlib 
+        - pystray 
+        - pillow 
+        - plyer
+
+# rpm-ostree install python3-tkinter
+
+    - name: Forward 8443 traffic to port 443
+      ansible.posix.firewalld:
+        permanent: true
+        immediate: true
+        state: disabled
+        port_forward:
+          - port: 8443
+            toport: 443
+            proto: tcp
+
+    - name: Allow rootless containers to bind ports >=80
+      become: true
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_unprivileged_port_start
+        value: 80
+        sysctl_set: true
+        state: present
+        reload: yes
+

@@ -1,0 +1,43 @@
+# DNF tuning and updates
+- block:
+  - name: Copy to dnf.conf
+    copy:
+      dest: /etc/dnf/dnf.conf
+      content: |
+        [main]
+        gpgcheck=1
+        installonly_limit=3
+        clean_requirements_on_remove=True
+        best=True
+        skip_if_unavailable=False
+        max_parallel_downloads=10
+
+  - name: Run DNF updates
+    command: dnf upgrade -y
+    register: dnf_result
+    changed_when: "'Nothing to do' not in dnf_result.stdout"
+    retries: 3
+    delay: 15
+    until: dnf_result.rc == 0
+    
+  when: ansible_facts['os_family'] == "RedHat" and dnf_config
+  tags: dnf_config
+
+- block:
+  - name: Check if reboot is required
+    command: needs-restarting -r
+    register: reboot_required
+    failed_when: false
+    changed_when: false
+
+  - name: Reboot if required
+    reboot:
+      msg: "Reboot initiated by Ansible after package updates"
+      reboot_timeout: 900
+    when: reboot_required.rc == 1
+
+  when: ansible_facts['os_family'] == "RedHat" and dnf_config
+  tags:
+    - reboot_needed
+    - never
+
