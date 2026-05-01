@@ -1,0 +1,9 @@
+#SPDX-License-Identifier: MIT-0
+---
+- import_tasks: pre.yaml
+  tags: pre
+
+- import_tasks: roses-checker.yaml
+- import_tasks: freeradius-container.yaml
+- import_tasks: password-reset-container.yaml
+- import_tasks: it-tools.yml

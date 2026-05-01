@@ -1,0 +1,19 @@
+---
+- name: Set default target to graphical
+  hosts: practice
+  become: yes
+  tasks:
+  - name: Link graphical.target to default.target
+    file:
+      src: /usr/lib/systemd/system/graphical.target
+      dest: /etc/systemd/system/default.target
+      state: link
+
+  - name: reboot
+    reboot:
+      test_command: whoami
+      msg: rebooting...
+
+  - name: print success message
+    debug:
+      msg: Reboot successful

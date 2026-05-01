@@ -1,5 +1,0 @@
-- name: dt-lab3
-  hosts: dt-lab3
-  become: yes
-  tasks:
-

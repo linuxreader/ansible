@@ -1,0 +1,4 @@
+ansible_user: davidt
+ansible_user_bootstrap: davidt
+a_user_id: 1000
+ssh_pub_key: "/var/home/davidt/.ssh/id_ed25519.pub"

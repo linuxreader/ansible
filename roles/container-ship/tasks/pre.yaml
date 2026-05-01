@@ -1,0 +1,23 @@
+# Set password and log in as user at least once after this
+- name: Make sure rootless user exists to run containers
+  user:
+    name: "{{ podman_user }}"
+    uid: "{{ podman_user_uid }}"
+    password: "{{ podman_user_password }}"
+    create_home: yes
+    shell: /bin/bash
+    state: present
+
+- name: Create Quadlet Directory
+  file:
+    path: /etc/containers/systemd/users/{{ podman_user }}
+    state: directory
+    mode: '0755'
+
+- name: Enable linger for {{ podman_user }} user
+  copy:
+    dest: "/var/lib/systemd/linger/{{ podman_user }}"
+    content: ""
+    owner: root
+    group: root
+    mode: '0644'

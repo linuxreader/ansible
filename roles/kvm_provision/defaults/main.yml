@@ -2,9 +2,9 @@
 ---
 # defaults file for kvm_provision
 
-base_image_name: AlmaLinux-10-GenericCloud-latest.x86_64.qcow2
-base_image_url: https://repo.almalinux.org/almalinux/10/cloud/x86_64/images/{{ base_image_name }}
-base_image_sha: 8729862a9e2d93c478c2334b33d01d7ee21934a795a9b68550cc1c63ffd0efae 
+base_image_name: AlmaLinux-9-GenericCloud-latest.x86_64.qcow2
+base_image_url: https://repo.almalinux.org/almalinux/9.7/cloud/x86_64/images/{{ base_image_name }}
+base_image_sha: 5ff9c048859046f41db4a33b1f1a96675711288078aac66b47d0be023af270d1 
 libvirt_pool_dir: "/var/lib/libvirt/images"
 vm_name: Alma10-dev
 vm_vcpus: 2

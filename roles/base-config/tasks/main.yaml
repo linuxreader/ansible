@@ -2,14 +2,27 @@
 - name: Set hostname
   hostname:
     name: "{{ inventory_hostname }}"
+  tags: set_hostname
 
 - name: Set timezone
   timezone:
     name: "{{ timezone }}"
+  tags: set_timezone
 
 - include_tasks: history.yaml
+  tags: history_config
+
 - include_tasks: dnf.yaml
+  tags: dnf_config
+
 - include_tasks: qemu.yaml
+  tags: qemu_config
+
 - include_tasks: ldap.yaml
+  tags: ldap
+
 - include_tasks: local.yaml
+  tags: local_users
+
 - include_tasks: auto_update.yaml
+  tags: dnf_automatic

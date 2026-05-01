@@ -1,34 +1,38 @@
-- name: ensure groups with correct state
-  ansible.builtin.group:
-    name: "{{ item.name }}"
-    gid: "{{ item.groupid | default(omit) }}"
-    state: "{{ item.state | default('present') }}"
-  loop: "{{ local_groups | default([]) }}"
+- block:
 
-- name: ensure users with correct state
-  ansible.builtin.user:
-    name: "{{ item.username }}"
-    groups: "{{ item.groups | default(omit) }}"
-    append: yes
-    shell: "{{ item.shell | default('/bin/bash') }}"
-    state: "{{ item.state | default('present') }}"
-    remove: "{{ item.remove_home | default('no') }}"
-    uid: "{{ item.uid | default(omit) }}"
-    home: "{{ item.home | default(omit) }}"
-    create_home: "{{ item.create_home | default(omit) }}"
-  loop: "{{ local_users | default([]) }}"
+  - name: ensure groups with correct state
+    ansible.builtin.group:
+      name: "{{ item.name }}"
+      gid: "{{ item.groupid | default(omit) }}"
+      state: "{{ item.state | default('present') }}"
+    loop: "{{ local_groups | default([]) }}"
 
-- name: allow group members in sudo
-  ansible.builtin.template:
-    src: sudo_users.j2
-    dest: /etc/sudoers.d/sudogroups
-    validate: 'visudo -cf %s'
-    mode: 0440
-  when: "((local_groups | default([])) | length > 0) or ((local_users | default([])) | length > 0)"
+  - name: ensure users with correct state
+    ansible.builtin.user:
+      name: "{{ item.username }}"
+      groups: "{{ item.groups | default(omit) }}"
+      append: yes
+      shell: "{{ item.shell | default('/bin/bash') }}"
+      state: "{{ item.state | default('present') }}"
+      remove: "{{ item.remove_home | default('no') }}"
+      uid: "{{ item.uid | default(omit) }}"
+      home: "{{ item.home | default(omit) }}"
+      create_home: "{{ item.create_home | default(omit) }}"
+    loop: "{{ local_users | default([]) }}"
 
-- name: add AD users to local groups
-  ansible.builtin.user:
-    name: "{{ item.username }}"
-    groups: "{{ item.groups }}"
-  loop: "{{ ad_local_group_members }}"
-  when: ad_local_group_members is defined
+  - name: allow group members in sudo
+    ansible.builtin.template:
+      src: sudo_users.j2
+      dest: /etc/sudoers.d/sudogroups
+      validate: 'visudo -cf %s'
+      mode: 0440
+    when: "((local_groups | default([])) | length > 0) or ((local_users | default([])) | length > 0)"
+
+  - name: add AD users to local groups
+    ansible.builtin.user:
+      name: "{{ item.username }}"
+      groups: "{{ item.groups }}"
+    loop: "{{ ad_local_group_members }}"
+    when: ad_local_group_members is defined
+  
+  tags: local_users

@@ -13,3 +13,10 @@
       name: qemu-guest-agent
       state: restarted
       enabled: yes
+  
+  when:
+    - ansible_facts.virtualization_role == "guest"
+    - ansible_facts.virtualization_type in ["kvm", "qemu"]
+    - qemu_config
+  tags: qemu_config
+  

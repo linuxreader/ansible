@@ -109,6 +109,7 @@
         state: started
         enabled: yes
   when: dnf_automatic.active == true
+  tags: dnf_automatic
 
 
 # --- Removal path ---
@@ -162,4 +163,4 @@
     - name: Reload systemd daemon after cleanup
       command: systemctl daemon-reexec
   when: dnf_automatic.active == false
-
+  tags: dnf_automatic

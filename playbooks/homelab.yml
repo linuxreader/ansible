@@ -1,0 +1,7 @@
+---
+- name: Configure homelab
+  hosts: homelab
+  roles:
+    - base-config
+    - container-ship
+#    - common
