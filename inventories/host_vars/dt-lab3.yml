@@ -1,1 +1,19 @@
 it_tools_container: true
+containers: true
+wordpress_pod: true
+wordpress_sites:
+  - name: potato
+    external_port: 8086
+    site_name: potato
+    database_user: potato
+    database_password: "{{ potato_db_password }}"
+  - name: tomato
+    external_port: 8085
+    site_name: tomato
+    database_user: tomato
+    database_password: "{{ tomato_db_password }}"
+  - name: sandwich
+    external_port: 8087
+    site_name: sandwich
+    database_user: sandwich
+    database_password: "{{ sandwich_db_password }}"

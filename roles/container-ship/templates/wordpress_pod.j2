@@ -1,0 +1,11 @@
+[Unit]
+Description=Wordpress Pod
+
+[Pod]
+PublishPort={{ item.external_port }}:80
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

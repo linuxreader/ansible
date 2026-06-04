@@ -1,3 +1,9 @@
 collections:
 - name: ansible.posix
 - name: community.general
+- name: containers.podman
+- name: awx.awx
+- name: community.proxmox
+- name: geerlingguy.php_roles
+- name: community.mysql
+

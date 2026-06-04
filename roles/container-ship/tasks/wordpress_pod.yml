@@ -1,0 +1,110 @@
+- name: Allow HTTP traffic on port {{ item.external_port }}
+  ansible.posix.firewalld:
+    port: "{{ item.external_port }}/tcp"
+    permanent: true
+    state: enabled
+  notify: Reload firewalld
+
+- name: Pull wordpress Podman image
+  containers.podman.podman_image:
+    name: "{{ wordpress_image }}"
+    state: present
+  become: false
+  become_user: "{{ podman_user }}"
+
+- name: Pull mysql image
+  containers.podman.podman_image:
+    name: "{{ mysql_image }}"
+    state: present
+  become: false
+  become_user: "{{ podman_user }}"
+
+- name: Add the wordpress quadlet file
+  template:
+    src: wordpress.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ item.site_name }}-wordpress.container
+  notify: daemon reload
+
+- name: Add the sql quadlet file
+  template:
+    src: wordpress_db.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ item.site_name }}-db.container
+  notify: daemon reload
+
+- name: Add the pod quadlet file
+  template:
+    src: wordpress_pod.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/{{ item.site_name }}.pod
+  notify: daemon reload
+
+- name: reload daemon
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Run and enable Wordpress pod
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: "{{ item.site_name }}-pod"
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Create backup directory for podman volume exports
+  file:
+    path: "{{ podman_backup_dir | default('/home/' + podman_user + '/backups') }}"
+    state: directory
+    owner: "{{ podman_user }}"
+    group: "{{ podman_user }}"
+    mode: '0750'
+ 
+- name: Set up weekly cron job to back up podman volumes
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.cron:
+    name: "Weekly podman volume backup - {{ item.site_name }}"
+    weekday: "0"
+    hour: "2"
+    minute: "0"
+    job: >-
+      BACKUP_DIR="{{ podman_backup_dir | default('/home/' + podman_user + '/backups') }}" &&
+      DATE=$(date +\%Y-\%m-\%d) &&
+      podman volume export {{ item.site_name }}
+      --output "${BACKUP_DIR}/{{ item.site_name }}_${DATE}.tar" &&
+      podman volume export {{ item.site_name }}db
+      --output "${BACKUP_DIR}/{{ item.site_name }}db_${DATE}.tar"
+    state: present
+ 
+- name: Set up weekly cron job to delete backups older than 3 months
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.cron:
+    name: "Weekly podman backup cleanup - {{ item.site_name }}"
+    weekday: "0"
+    hour: "3"
+    minute: "0"
+    job: >-
+      find "{{ podman_backup_dir | default('/home/' + podman_user + '/backups') }}"
+      -name "{{ item.site_name }}-*.tar"
+      -mtime +90
+      -delete
+    state: present
+
+- name: Enable podman auto-update timer
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: podman-auto-update.timer
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+

@@ -1,0 +1,15 @@
+[Container]
+Environment=WORDPRESS_DB_HOST=systemd-{{ item.site_name }}-db WORDPRESS_DB_USER={{ item.database_user }} WORDPRESS_DB_PASSWORD={{ item.database_password }} WORDPRESS_DB_NAME={{ item.site_name }}db
+Image={{ wordpress_image }}
+Pod={{ item.site_name }}.pod
+Volume={{ item.site_name }}:/var/www/html
+AutoUpdate=registry
+HealthCmd=CMD-SHELL wget -q --spider http://localhost || exit 1
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=30s
+
+[Service]
+Restart=always
+
+
