@@ -1,7 +1,10 @@
-#SPDX-License-Identifier: MIT-0
 ---
+# Variable to enable container pre-setup tasks, set to true to run containers on a system.
+containers: false
+
 podman_user: seal
 podman_user_uid: 11111
+
 
 ###########################################
 # defaults for freeradius_container ######
@@ -10,6 +13,7 @@ podman_user_uid: 11111
 freeradius_container: no
 
 ## Set the freeradius image
+
 freerad_image: docker.io/freeradius/freeradius-server:latest
 
 ###########################################
@@ -19,3 +23,23 @@ password_reset_container: no
 password_reset_container_image: docker.io/ltbproject/self-service-password:latest
 
 password_reset_port: 8085
+
+###########################################
+##### IT Tools Container ##################
+###########################################
+it_tools_container: false
+it_tools_port: 8080
+it_tools_container_image: docker.io/corentinth/it-tools:latest
+
+
+###########################################
+##### Worpress Pod ########################
+###########################################
+wordpress_image: docker.io/wordpress:latest
+mysql_image: docker.io/mysql:latest
+
+###########################################
+##### Cloudflared #########################
+###########################################
+cloudflared_container_image: docker.io/cloudflare/cloudflared:latest
+

@@ -1,0 +1,30 @@
+## Use `sudo -u {{ podman_user }} bash -li` to login as nologin user.
+- name: Make sure rootless user exists to run containers
+  user:
+    name: "{{ podman_user }}"
+    uid: "{{ podman_user_uid }}"
+    password: "{{ podman_user_password }}"
+    create_home: yes
+    shell: /bin/bash
+    state: present
+
+- name: Enable linger for {{ podman_user }}
+  command: loginctl enable-linger {{ podman_user }}
+  become: yes
+    
+- name: Create Quadlet Directory
+  file:
+    path: /etc/containers/systemd/users/{{ podman_user }}
+    state: directory
+    mode: '0755'
+
+- name: Enable podman socket
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: podman.socket
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
