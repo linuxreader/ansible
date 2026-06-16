@@ -12,6 +12,17 @@
       - wordpress_pod
       - wordpress_sites is defined
     tags: wordpress_pod
+  - block:
+      - include_tasks: zot-container.yml
+    when:
+      - zot_container
+    tags: zot_container
+  - block:
+      - include_tasks: hugo.yml
+    when:
+      - hugosite
+    tags:
+      - hugosite
 
   tags: containers
   when: containers

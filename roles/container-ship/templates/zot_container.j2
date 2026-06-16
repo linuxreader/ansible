@@ -1,0 +1,16 @@
+[Container]
+Image=zot.image
+PodmanArgs=--interactive --tty
+PublishPort=5000:5000
+Volume=registry:/var/lib/registry
+Volume=/home/{{ podman_user }}/zot/htpasswd:/var/lib/htpasswd:z
+Volume=/home/{{ podman_user }}/zot/config.json:/etc/zot/config.json:z
+AutoUpdate=registry
+HealthCmd=curl -f http://localhost:5000/v2/ || exit 1
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=30s
+
+
+[Service]
+Restart=always

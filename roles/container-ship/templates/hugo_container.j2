@@ -1,0 +1,15 @@
+[Container]
+Image=hugosite.image
+PublishPort={{ hugosite_port }}:80
+AutoUpdate=registry
+HealthCmd=curl -f http://localhost:80
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=30s
+
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

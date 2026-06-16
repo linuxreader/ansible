@@ -4,7 +4,7 @@ containers: false
 
 podman_user: seal
 podman_user_uid: 11111
-
+podman_auto_update_schedule: "*:0/5"
 
 ###########################################
 # defaults for freeradius_container ######
@@ -42,4 +42,15 @@ mysql_image: docker.io/mysql:latest
 ##### Cloudflared #########################
 ###########################################
 cloudflared_container_image: docker.io/cloudflare/cloudflared:latest
+
+###########################################
+##### Zot #################################
+###########################################
+zot_image: ghcr.io/project-zot/zot:latest
+
+###########################################
+##### Hugo ################################
+###########################################
+hugosite_image: dt-lab3:5000/lrsite
+hugosite_port: 8090
 

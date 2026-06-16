@@ -28,3 +28,40 @@
     scope: user
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Add custom registries.conf 
+  template:
+     src: registries.conf.j2
+     dest: /etc/containers/registries.conf
+     owner: root
+     group: root
+     mode: '0644'
+
+- name: Create podman-auto-update timer override directory
+  ansible.builtin.file:
+    path: /home/{{ podman_user }}/.config/systemd/user/podman-auto-update.timer.d
+    state: directory
+    owner: "{{ podman_user }}"
+    group: "{{ podman_user }}"
+    mode: "0755"
+
+- name: Add podman-auto-update timer override
+  ansible.builtin.template:
+    src: podman-auto-update-timer-override.conf.j2
+    dest: /home/{{ podman_user }}/.config/systemd/user/podman-auto-update.timer.d/override.conf
+    owner: "{{ podman_user }}"
+    group: "{{ podman_user }}"
+    mode: "0644"
+  notify: Reload and restart podman-auto-update timer
+
+- name: Enable podman auto-update timer
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: podman-auto-update.timer
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+

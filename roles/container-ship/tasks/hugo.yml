@@ -1,0 +1,50 @@
+- name: Allow HTTP traffic
+  ansible.posix.firewalld:
+    port: "{{ hugosite_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  notify: Reload firewalld
+
+- name: Add hugo image quadlet
+  template:
+    src: hugosite_image.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/hugosite.image
+  notify: daemon reload
+
+- name: Add hugo quadlet file
+  template:
+    src: hugo_container.j2
+    dest: /etc/containers/systemd/users/{{ podman_user }}/hugo.container
+  notify: daemon reload
+
+- name: reload daemon
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Run and enable hugo container
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: "hugo.service"
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
+
+- name: Enable podman auto-update timer
+  become: true
+  become_user: "{{ podman_user }}"
+  ansible.builtin.systemd_service:
+    name: podman-auto-update.timer
+    state: started
+    enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"

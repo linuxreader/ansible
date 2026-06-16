@@ -1,6 +1,6 @@
 it_tools_container: true
 containers: true
-wordpress_pod: true
+wordpress_pod: false
 wordpress_sites:
   - name: potato
     external_port: 8086
@@ -17,3 +17,5 @@ wordpress_sites:
     site_name: sandwich
     database_user: sandwich
     database_password: "{{ sandwich_db_password }}"
+zot_container: true
+hugosite: true
