@@ -34,8 +34,8 @@
     mode: '0644'
 
 - name: copy htpasswd to host
-  copy:
-    src: zot-htpasswd
+  template:
+    src: zot-htpasswd.j2
     dest: /home/{{ podman_user }}/zot/htpasswd
     owner: "{{ podman_user }}"
     group: "{{ podman_user }}"

@@ -15,7 +15,6 @@
         - org.gnome.Snapshot
         - org.libreoffice.LibreOffice
         - org.remmina.Remmina
-        - com.termius.Termius
         - com.slack.Slack
         - org.keepassxc.KeePassXC
         - org.mozilla.Thunderbird
@@ -27,19 +26,33 @@
         - org.adishatz.Screenshot
         - com.github.finefindus.eyedropper
         - com.obsproject.Studio
-        - com.vivaldi.Vivaldi
         - com.vscodium.codium
         - org.kde.kdenlive
         - io.github.input_leap.input-leap
         - com.spotify.Client
-        - org.kde.kdenlive
         - com.github.johnfactotum.Foliate
         - be.alexandervanhee.gradia
         - org.atheme.audacious
         - org.kde.krita
         - de.leopoldluley.Clapgrep
-        - im.riot.Riot
         - io.github.Faugus.faugus-launcher
+        - info.beyondallreason.bar
+        - com.raggesilver.BlackBox
+        - com.calibre_ebook.calibre
+        - in.cinny.Cinny
+        - org.gnome.DejaDup
+        - com.github.tchx84.Flatseal
+        - be.alexandervanhee.gradia
+        - org.kde.krita
+        - page.codeberg.libre_menu_editor.LibreMenuEditor
+        - io.missioncenter.MissionCenter3
+        - md.obsidian.Obsidian
+        - org.gnome.World.PikaBackup
+        - io.podman_desktop.PodmanDesktop
+        - com.github.marhkb.Pods
+        - org.qbittorrent.qBittorrent
+        - page.tesk.Refine
+        - com.valvesoftware.Steam
       tags: flatpack_install
 
     - name: Install homebrew applications

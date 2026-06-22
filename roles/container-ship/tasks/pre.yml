@@ -65,3 +65,10 @@
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ podman_user_uid }}"
 
+- name: Add registry credentials for {{ podman_user }}
+  template:
+    src: auth.json.j2
+    dest: /run/user/{{ podman_user_uid }}/containers/auth.json
+    owner: "{{ podman_user }}"
+    group: "{{ podman_user }}"
+    mode: "0644"

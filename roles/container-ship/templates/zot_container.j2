@@ -6,7 +6,7 @@ Volume=registry:/var/lib/registry
 Volume=/home/{{ podman_user }}/zot/htpasswd:/var/lib/htpasswd:z
 Volume=/home/{{ podman_user }}/zot/config.json:/etc/zot/config.json:z
 AutoUpdate=registry
-HealthCmd=curl -f http://localhost:5000/v2/ || exit 1
+HealthCmd=curl -f http://localhost:5000/ || exit 1
 HealthInterval=30s
 HealthRetries=3
 HealthStartPeriod=30s
@@ -14,3 +14,6 @@ HealthStartPeriod=30s
 
 [Service]
 Restart=always
+
+[Install]
+WantedBy=default.target
